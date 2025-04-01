@@ -2,7 +2,7 @@
 
 Heavily inspired by jbovee's [j-archive-parser](https://github.com/jbovee/j-archive-parser)
 
-Jeopardy Archive Parser is a Go-based tool designed to download and parse episodes from the [J! Archive](http://j-archive.com). I created this in order to more easily build Anki decks out of the clues.
+Jeopardy Archive Parser is a tool designed to download and parse episodes from [J! Archive](http://j-archive.com). My primary motivation in making this is to be able to more easily build Anki decks from clues that have appeared on the show, as well as getting more experience with Go.
 
 It has two modes:
 
