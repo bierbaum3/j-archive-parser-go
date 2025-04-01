@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -108,12 +109,58 @@ func parseSeason(season int) {
 			log.Printf("Error parsing episode %s: %v", episodePath, err)
 			continue
 		}
-		// Write the row to the CSV
+		// Collect all rows from this episode
+		var episodeRows [][]string
 		for _, round := range rounds {
-			for _, row := range round {
-				writer.Write(row)
-			}
+			episodeRows = append(episodeRows, round...)
 		}
+
+		// Sort rows first by category then by value
+		sort.Slice(episodeRows, func(i, j int) bool {
+			// First group by category
+			if episodeRows[i][3] == episodeRows[j][3] {
+				valueI := episodeRows[i][4]
+				valueJ := episodeRows[j][4]
+
+				// Check if a clue is a Daily Double
+				isDD_I := strings.HasPrefix(valueI, "DD:")
+				isDD_J := strings.HasPrefix(valueJ, "DD:")
+
+				// If one clue is a DD and the other isn't, the non-DD clue comes first
+				if isDD_I != isDD_J {
+					return !isDD_I
+				}
+
+				// Remove "DD:" prefix for comparison
+				if isDD_I {
+					valueI = strings.TrimSpace(strings.TrimPrefix(valueI, "DD:"))
+				}
+				if isDD_J {
+					valueJ = strings.TrimSpace(strings.TrimPrefix(valueJ, "DD:"))
+				}
+
+				// Remove any $ sign and commas
+				valueI = strings.ReplaceAll(strings.TrimPrefix(valueI, "$"), ",", "")
+				valueJ = strings.ReplaceAll(strings.TrimPrefix(valueJ, "$"), ",", "")
+
+				// Convert to integer
+				vi, err1 := strconv.Atoi(valueI)
+				vj, err2 := strconv.Atoi(valueJ)
+				if err1 == nil && err2 == nil {
+					return vi < vj
+				}
+				// Fall back to string comparison if conversion fails
+				return valueI < valueJ
+			}
+			// Sort by category name.
+			return episodeRows[i][3] < episodeRows[j][3]
+		})
+
+		// Write rows to the CSV
+		for _, row := range episodeRows {
+			writer.Write(row)
+		}
+
 	}
 	fmt.Printf("Season %d complete\n", season)
 }

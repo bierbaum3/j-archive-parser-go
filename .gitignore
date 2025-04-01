@@ -2,3 +2,4 @@
 *.html
 /parsed-csv
 /season-archive
+.DS_Store
